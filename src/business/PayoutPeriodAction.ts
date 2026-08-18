@@ -6,20 +6,20 @@ export class PayoutPeriodAction {
     startDate: Date | string;
     endDate: Date | string;
   }) {
-    // 1. Un-mark previous active payout periods
-    await prisma.payoutPeriod.updateMany({
-      where: { isCurrent: true },
-      data: { isCurrent: false },
-    });
+    return await prisma.$transaction(async (tx) => {
+      await tx.payoutPeriod.updateMany({
+        where: { isCurrent: true },
+        data: { isCurrent: false },
+      });
 
-    // 2. Create new period with required dates
-    return await prisma.payoutPeriod.create({
-      data: {
-        period: data.period,
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
-        isCurrent: true,
-      },
+      return await tx.payoutPeriod.create({
+        data: {
+          period: data.period,
+          startDate: new Date(data.startDate),
+          endDate: new Date(data.endDate),
+          isCurrent: true,
+        },
+      });
     });
   }
 
@@ -30,7 +30,15 @@ export class PayoutPeriodAction {
     });
   }
 
-  static async updatePeriod(
+  // 3. GET PERIOD BY ID (Dagdag ito)
+  public static async getPeriodById(id: string) {
+    return await prisma.payoutPeriod.findFirst({
+      where: { id, deletedAt: null },
+    });
+  }
+
+  // 4. UPDATE PERIOD
+  public static async updatePeriod(
     id: string,
     data: {
       period?: string;
@@ -39,6 +47,13 @@ export class PayoutPeriodAction {
       isCurrent?: boolean;
     },
   ) {
+    if (data.isCurrent === true) {
+      await prisma.payoutPeriod.updateMany({
+        where: { isCurrent: true, id: { not: id } },
+        data: { isCurrent: false },
+      });
+    }
+
     return await prisma.payoutPeriod.update({
       where: { id },
       data: {

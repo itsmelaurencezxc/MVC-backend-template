@@ -5,11 +5,11 @@ import { SalaryRecordAction } from "../../business/SalaryRecordAction";
 export class SalaryRecordController {
   async getAll(req: Request, res: Response) {
     try {
-      const records = await SalaryRecordAction.getAll();
+      const records = await SalaryRecordAction.getAllRecords();
       return AppResponse.sendSuccess({
         res,
         code: 200,
-        data: records,
+        data: records || [],
       });
     } catch (error: any) {
       return AppResponse.sendErrors({
@@ -29,18 +29,16 @@ export class SalaryRecordController {
         res,
         code: 400,
         data: null,
-        message: "Payout Period ID parameter is required",
+        message: "Payout period ID parameter is required",
       });
     }
 
     try {
-      const result =
-        await SalaryRecordAction.getPeriodRecordsWithSummary(payoutPeriodId);
-
+      const data = await SalaryRecordAction.getByPeriod(payoutPeriodId);
       return AppResponse.sendSuccess({
         res,
         code: 200,
-        data: result,
+        data,
       });
     } catch (error: any) {
       return AppResponse.sendErrors({
@@ -54,65 +52,39 @@ export class SalaryRecordController {
 
   async create(req: Request, res: Response) {
     const {
-      employeeId, // 👈 Pinalitan ang 'name' ng 'employeeId'
+      employeeId,
+      payoutPeriodId,
       grossEarnings,
       commissionRate,
+      salary,
       recmats,
       isClaimed,
-      payoutPeriodId,
     } = req.body;
 
-    // 1. Validation for Employee ID
-    if (!employeeId || typeof employeeId !== "string") {
+    if (!employeeId || !payoutPeriodId) {
       return AppResponse.sendErrors({
         res,
         code: 400,
         data: null,
-        message: "Employee ID is required",
-      });
-    }
-
-    if (grossEarnings === undefined || Number(grossEarnings) < 0) {
-      return AppResponse.sendErrors({
-        res,
-        code: 400,
-        data: null,
-        message: "Gross earnings must be a valid positive number",
-      });
-    }
-
-    if (commissionRate === undefined || Number(commissionRate) < 0) {
-      return AppResponse.sendErrors({
-        res,
-        code: 400,
-        data: null,
-        message: "Commission rate percentage is required",
-      });
-    }
-
-    if (!payoutPeriodId) {
-      return AppResponse.sendErrors({
-        res,
-        code: 400,
-        data: null,
-        message: "Payout Period ID is required",
+        message: "Both employeeId and payoutPeriodId are required",
       });
     }
 
     try {
-      const record = await SalaryRecordAction.create({
-        employeeId, // 👈 Pinasa ang employeeId sa halip na name
-        grossEarnings: Number(grossEarnings),
-        commissionRate: Number(commissionRate),
-        recmats,
-        isClaimed: Boolean(isClaimed),
+      const newRecord = await SalaryRecordAction.createRecord({
+        employeeId,
         payoutPeriodId,
+        grossEarnings: grossEarnings ?? 0,
+        commissionRate: commissionRate ?? 0,
+        salary: salary ?? 0,
+        recmats,
+        isClaimed,
       });
 
       return AppResponse.sendSuccess({
         res,
         code: 201,
-        data: record,
+        data: newRecord,
       });
     } catch (error: any) {
       return AppResponse.sendErrors({
@@ -126,30 +98,41 @@ export class SalaryRecordController {
 
   async update(req: Request, res: Response) {
     const { id } = req.params;
+    const { grossEarnings, commissionRate, salary, recmats, isClaimed } =
+      req.body;
 
     if (!id) {
       return AppResponse.sendErrors({
         res,
         code: 400,
         data: null,
-        message: "Record ID parameter is required",
+        message: "Salary Record ID is required",
       });
     }
 
     try {
-      const updatedRecord = await SalaryRecordAction.update(id, req.body);
+      const updatedRecord = await SalaryRecordAction.updateRecord(id, {
+        grossEarnings,
+        commissionRate,
+        salary,
+        recmats,
+        isClaimed,
+      });
 
       return AppResponse.sendSuccess({
         res,
         code: 200,
         data: updatedRecord,
+        message: "Salary record updated successfully",
       });
     } catch (error: any) {
+      const code = error.code === "P2025" ? 404 : 500;
       return AppResponse.sendErrors({
         res,
-        code: 500,
+        code,
         data: null,
-        message: error.message || "Internal server error",
+        message:
+          error.code === "P2025" ? "Salary record not found" : error.message,
       });
     }
   }
@@ -162,24 +145,26 @@ export class SalaryRecordController {
         res,
         code: 400,
         data: null,
-        message: "Record ID parameter is required",
+        message: "Salary Record ID is required",
       });
     }
 
     try {
-      await SalaryRecordAction.softDelete(id);
+      await SalaryRecordAction.softDeleteRecord(id);
 
       return AppResponse.sendSuccess({
         res,
         code: 200,
-        data: { message: "Record soft-deleted successfully" },
+        data: { message: "Salary record archived successfully" },
       });
     } catch (error: any) {
+      const code = error.code === "P2025" ? 404 : 500;
       return AppResponse.sendErrors({
         res,
-        code: 500,
+        code,
         data: null,
-        message: error.message || "Internal server error",
+        message:
+          error.code === "P2025" ? "Salary record not found" : error.message,
       });
     }
   }

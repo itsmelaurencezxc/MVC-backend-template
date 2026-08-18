@@ -6,18 +6,49 @@ export class PayoutPeriodController {
   async getAll(req: Request, res: Response) {
     try {
       const periods = await PayoutPeriodAction.getAllPeriods();
-      if (!periods || periods.length === 0) {
-        return AppResponse.sendSuccess({
-          res,
-          code: 200,
-          data: [],
-          message: "No payout periods found",
-        });
-      }
       return AppResponse.sendSuccess({
         res,
         code: 200,
-        data: periods,
+        data: periods || [],
+      });
+    } catch (error: any) {
+      return AppResponse.sendErrors({
+        res,
+        code: 500,
+        data: null,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
+
+  async getById(req: Request, res: Response) {
+    const { id } = req.params;
+
+    if (!id) {
+      return AppResponse.sendErrors({
+        res,
+        code: 400,
+        data: null,
+        message: "Period ID is required",
+      });
+    }
+
+    try {
+      const period = await PayoutPeriodAction.getPeriodById(id);
+
+      if (!period) {
+        return AppResponse.sendErrors({
+          res,
+          code: 404,
+          data: null,
+          message: "Payout period not found",
+        });
+      }
+
+      return AppResponse.sendSuccess({
+        res,
+        code: 200,
+        data: period,
       });
     } catch (error: any) {
       return AppResponse.sendErrors({
@@ -41,12 +72,25 @@ export class PayoutPeriodController {
       });
     }
 
-    if (!startDate || !endDate) {
+    // Date validation
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return AppResponse.sendErrors({
         res,
         code: 400,
         data: null,
-        message: "Start date and end date are required",
+        message: "Start date and end date must be valid date strings",
+      });
+    }
+
+    if (start > end) {
+      return AppResponse.sendErrors({
+        res,
+        code: 400,
+        data: null,
+        message: "Start date cannot be later than end date",
       });
     }
 
@@ -100,11 +144,17 @@ export class PayoutPeriodController {
         message: "Payout period updated successfully",
       });
     } catch (error: any) {
+      const code = error.code === "P2025" ? 404 : 500;
+      const message =
+        error.code === "P2025"
+          ? "Payout period not found"
+          : error.message || "Internal server error";
+
       return AppResponse.sendErrors({
         res,
-        code: 500,
+        code,
         data: null,
-        message: error.message || "Internal server error",
+        message,
       });
     }
   }
@@ -130,11 +180,17 @@ export class PayoutPeriodController {
         data: { message: "Payout period archived successfully" },
       });
     } catch (error: any) {
+      const code = error.code === "P2025" ? 404 : 500;
+      const message =
+        error.code === "P2025"
+          ? "Payout period not found"
+          : error.message || "Internal server error";
+
       return AppResponse.sendErrors({
         res,
-        code: 500,
+        code,
         data: null,
-        message: error.message || "Internal server error",
+        message,
       });
     }
   }
