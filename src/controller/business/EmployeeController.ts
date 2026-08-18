@@ -50,9 +50,9 @@ export class EmployeeController {
     }
   }
 
+  // UPDATED: Tumatanggap na ng role sa payload
   async create(req: Request, res: Response) {
-    // Kunin din ang discordId galing sa request body
-    const { name, discordId } = req.body;
+    const { name, discordId, role } = req.body;
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       return AppResponse.sendErrors({
@@ -64,12 +64,12 @@ export class EmployeeController {
     }
 
     try {
-      // Ipasa ang pangalan at discordId (kung meron man)
-      const employee = await EmployeeAction.create(name, discordId);
+      const employee = await EmployeeAction.create(name, discordId, role);
       return AppResponse.sendSuccess({
         res,
         code: 201,
         data: employee,
+        message: "Employee created successfully",
       });
     } catch (error: any) {
       return AppResponse.sendErrors({
@@ -83,8 +83,7 @@ export class EmployeeController {
 
   async update(req: Request, res: Response) {
     const { id } = req.params;
-    // Kunin din ang discordId para ma-update sakaling magbago
-    const { name, discordId } = req.body;
+    const { name, discordId, role } = req.body;
 
     if (!id) {
       return AppResponse.sendErrors({
@@ -105,11 +104,17 @@ export class EmployeeController {
     }
 
     try {
-      const updatedEmployee = await EmployeeAction.update(id, name, discordId);
+      const updatedEmployee = await EmployeeAction.update(
+        id,
+        name,
+        discordId,
+        role,
+      );
       return AppResponse.sendSuccess({
         res,
         code: 200,
         data: updatedEmployee,
+        message: "Employee updated successfully",
       });
     } catch (error: any) {
       return AppResponse.sendErrors({
@@ -139,6 +144,29 @@ export class EmployeeController {
         res,
         code: 200,
         data: { message: "Employee archived successfully" },
+      });
+    } catch (error: any) {
+      return AppResponse.sendErrors({
+        res,
+        code: 500,
+        data: null,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
+
+  // BAGONG CONTROLLER METHOD PARA SA TEAMS
+  async getTeamList(req: Request, res: Response) {
+    try {
+      // Tawagin ang action na ginawa natin
+      const teamList = await EmployeeAction.getTeamMembersWithDiscord();
+
+      // I-return ang tagumpay gamit ang AppResponse mo
+      return AppResponse.sendSuccess({
+        res,
+        code: 200,
+        data: teamList,
+        message: "Team members with Discord profiles retrieved successfully",
       });
     } catch (error: any) {
       return AppResponse.sendErrors({

@@ -7,6 +7,8 @@ const controller = new EmployeeController();
 
 employeeRoutes.use(AuthMiddleware.verifyAdminToken);
 
+employeeRoutes.get("/team-list", controller.getTeamList);
+
 employeeRoutes.get("/", controller.getAll);
 employeeRoutes.get("/:id", controller.getById);
 employeeRoutes.post("/create", controller.create);

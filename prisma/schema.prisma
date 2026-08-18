@@ -20,10 +20,19 @@ model User {
   @@map("user")
 }
 
+enum EmployeeRole {
+  TRAINEE
+  SENIOR
+  HR
+  SECRETARY
+  OWNER
+}
+
 // 2. EMPLOYEE
 model Employee {
-  id            String    @id @default(uuid())
+  id            String       @id @default(uuid())
   name          String
+  role          EmployeeRole @default(TRAINEE) // Default kapag walang nilagay
   discordId     String? // Discord ID o Username
   discordAvatar String? // Link ng profile picture sa Discord
   discordBanner String? // Link ng banner
