@@ -2,7 +2,6 @@ import { Prisma } from "@prisma/client";
 import prisma from "../utils/client";
 
 export class SalaryRecordAction {
-  // 1. GET ALL SALARY RECORDS
   public static async getAllRecords() {
     return await prisma.salaryRecord.findMany({
       where: { deletedAt: null },
@@ -18,7 +17,6 @@ export class SalaryRecordAction {
     });
   }
 
-  // 2. GET RECORDS BY PAYOUT PERIOD ID (WITH ANALYTICS)
   public static async getByPeriod(payoutPeriodId: string) {
     const records = await prisma.salaryRecord.findMany({
       where: {
@@ -46,15 +44,12 @@ export class SalaryRecordAction {
     };
   }
 
-  // 3. CREATE SALARY RECORD
   public static async createRecord(data: {
     employeeId: string;
     payoutPeriodId: string;
     grossEarnings: number | Prisma.Decimal;
-    commissionRate?: number | Prisma.Decimal;
-    salary?: number | Prisma.Decimal;
+    commissionRate: number | Prisma.Decimal;
     recmats?: string;
-    isClaimed?: boolean;
   }) {
     const employee = await prisma.employee.findUnique({
       where: { id: data.employeeId },
@@ -64,17 +59,21 @@ export class SalaryRecordAction {
       throw new Error("Employee not found or archived");
     }
 
+    const gross = Number(data.grossEarnings);
+    const commRate = Number(data.commissionRate);
+
+    const computedSalary = gross * (commRate / 100);
+
     return await prisma.salaryRecord.create({
       data: {
         employeeId: data.employeeId,
         payoutPeriodId: data.payoutPeriodId,
         name: employee.name,
-        grossEarnings: new Prisma.Decimal(data.grossEarnings),
-        // Nilagyan ng default na 0 kapag walang ipinasa
-        commissionRate: new Prisma.Decimal(data.commissionRate ?? 0),
-        salary: new Prisma.Decimal(data.salary ?? 0),
+        grossEarnings: new Prisma.Decimal(gross),
+        commissionRate: new Prisma.Decimal(commRate),
+        salary: new Prisma.Decimal(computedSalary),
         recmats: data.recmats || null,
-        isClaimed: data.isClaimed ?? false,
+        isClaimed: false,
       },
       include: {
         employee: true,
@@ -89,12 +88,10 @@ export class SalaryRecordAction {
     data: {
       grossEarnings?: number | Prisma.Decimal;
       commissionRate?: number | Prisma.Decimal;
-      salary?: number | Prisma.Decimal;
       recmats?: string;
       isClaimed?: boolean;
     },
   ) {
-    // 1. Kuhanin muna ang umiiral na record sa database
     const existingRecord = await prisma.salaryRecord.findUnique({
       where: { id },
     });
@@ -105,7 +102,6 @@ export class SalaryRecordAction {
       throw error;
     }
 
-    // 2. Alamin ang bagong values (gamitin ang dati kapag walang ipinasa)
     const gross =
       data.grossEarnings !== undefined
         ? Number(data.grossEarnings)
@@ -116,21 +112,8 @@ export class SalaryRecordAction {
         ? Number(data.commissionRate)
         : Number(existingRecord.commissionRate);
 
-    // 3. AUTOMATIC RECALCULATION LOGIC
-    // Baguhin ang formula sa ibaba batay sa totoong computation ng negosyo mo.
-    // Halimbawa: Commission = Gross * (CommissionRate / 100) + Base/Current Salary
-    let calculatedSalary =
-      data.salary !== undefined ? Number(data.salary) : null;
+    const calculatedSalary = gross * (commRate / 100);
 
-    if (calculatedSalary === null) {
-      const commissionAmount = gross * (commRate / 100);
-
-      // Kung ang salary ay ang dating base salary + commission:
-      // Pwede mong baguhin ang formula rito, halimbawa: gross + commissionAmount
-      calculatedSalary = Number(existingRecord.salary) + commissionAmount;
-    }
-
-    // 4. I-update ang record sa Prisma
     return await prisma.salaryRecord.update({
       where: { id },
       data: {
@@ -143,7 +126,6 @@ export class SalaryRecordAction {
     });
   }
 
-  // 5. SOFT DELETE SALARY RECORD
   public static async softDeleteRecord(id: string) {
     return await prisma.salaryRecord.update({
       where: { id },

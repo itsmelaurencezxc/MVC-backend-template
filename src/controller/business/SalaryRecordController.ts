@@ -56,9 +56,7 @@ export class SalaryRecordController {
       payoutPeriodId,
       grossEarnings,
       commissionRate,
-      salary,
       recmats,
-      isClaimed,
     } = req.body;
 
     if (!employeeId || !payoutPeriodId) {
@@ -76,15 +74,14 @@ export class SalaryRecordController {
         payoutPeriodId,
         grossEarnings: grossEarnings ?? 0,
         commissionRate: commissionRate ?? 0,
-        salary: salary ?? 0,
         recmats,
-        isClaimed,
       });
 
       return AppResponse.sendSuccess({
         res,
         code: 201,
         data: newRecord,
+        message: "Salary record created successfully",
       });
     } catch (error: any) {
       return AppResponse.sendErrors({
@@ -98,8 +95,8 @@ export class SalaryRecordController {
 
   async update(req: Request, res: Response) {
     const { id } = req.params;
-    const { grossEarnings, commissionRate, salary, recmats, isClaimed } =
-      req.body;
+
+    const { grossEarnings, commissionRate, recmats, isClaimed } = req.body;
 
     if (!id) {
       return AppResponse.sendErrors({
@@ -114,7 +111,6 @@ export class SalaryRecordController {
       const updatedRecord = await SalaryRecordAction.updateRecord(id, {
         grossEarnings,
         commissionRate,
-        salary,
         recmats,
         isClaimed,
       });
