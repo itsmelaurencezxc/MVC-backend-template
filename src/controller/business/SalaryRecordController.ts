@@ -54,7 +54,7 @@ export class SalaryRecordController {
 
   async create(req: Request, res: Response) {
     const {
-      name,
+      employeeId, // 👈 Pinalitan ang 'name' ng 'employeeId'
       grossEarnings,
       commissionRate,
       recmats,
@@ -62,12 +62,13 @@ export class SalaryRecordController {
       payoutPeriodId,
     } = req.body;
 
-    if (!name || name.trim() === "") {
+    // 1. Validation for Employee ID
+    if (!employeeId || typeof employeeId !== "string") {
       return AppResponse.sendErrors({
         res,
         code: 400,
         data: null,
-        message: "Name is required",
+        message: "Employee ID is required",
       });
     }
 
@@ -100,7 +101,7 @@ export class SalaryRecordController {
 
     try {
       const record = await SalaryRecordAction.create({
-        name: name.trim(),
+        employeeId, // 👈 Pinasa ang employeeId sa halip na name
         grossEarnings: Number(grossEarnings),
         commissionRate: Number(commissionRate),
         recmats,
@@ -153,7 +154,6 @@ export class SalaryRecordController {
     }
   }
 
-  // 5. DELETE SALARY RECORD
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 

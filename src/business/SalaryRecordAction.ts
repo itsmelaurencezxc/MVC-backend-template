@@ -59,31 +59,34 @@ export class SalaryRecordAction {
   }
 
   public static async create(data: {
-    name: string;
+    employeeId: string;
     grossEarnings: number;
     commissionRate: number;
     recmats?: string;
     isClaimed?: boolean;
     payoutPeriodId: string;
   }) {
+    const employee = await prisma.employee.findUnique({
+      where: { id: data.employeeId },
+    });
+
+    if (!employee) {
+      throw new Error("Employee not found");
+    }
+
     const rateDecimal = data.commissionRate / 100;
     const computedSalary = data.grossEarnings * rateDecimal;
 
     const record = await prisma.salaryRecord.create({
       data: {
-        name: data.name,
+        employeeId: data.employeeId, // 👈 Dagdag para mawala ang error
+        commissionRate: data.commissionRate, // 👈 Dagdag para mawala ang error
+        name: employee.name,
         grossEarnings: data.grossEarnings,
         salary: computedSalary,
         recmats: data.recmats || null,
         isClaimed: data.isClaimed || false,
         payoutPeriodId: data.payoutPeriodId,
-      },
-    });
-
-    await prisma.earningsLog.create({
-      data: {
-        salaryRecordId: record.id,
-        amount: data.grossEarnings,
       },
     });
 

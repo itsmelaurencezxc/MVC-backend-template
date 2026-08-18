@@ -30,7 +30,7 @@ export class PayoutPeriodController {
   }
 
   async create(req: Request, res: Response) {
-    const { period } = req.body;
+    const { period, startDate, endDate } = req.body;
 
     if (!period || typeof period !== "string" || period.trim() === "") {
       return AppResponse.sendErrors({
@@ -40,8 +40,23 @@ export class PayoutPeriodController {
         message: "Period name is required and must be a valid string",
       });
     }
+
+    if (!startDate || !endDate) {
+      return AppResponse.sendErrors({
+        res,
+        code: 400,
+        data: null,
+        message: "Start date and end date are required",
+      });
+    }
+
     try {
-      const newPeriod = await PayoutPeriodAction.createPeriod(period.trim());
+      const newPeriod = await PayoutPeriodAction.createPeriod({
+        period: period.trim(),
+        startDate,
+        endDate,
+      });
+
       return AppResponse.sendSuccess({
         res,
         code: 201,
@@ -57,10 +72,9 @@ export class PayoutPeriodController {
     }
   }
 
-  // 👈 ITO ANG BAGO: UPDATE METHOD
   async update(req: Request, res: Response) {
     const { id } = req.params;
-    const { period } = req.body;
+    const { period, startDate, endDate, isCurrent } = req.body;
 
     if (!id) {
       return AppResponse.sendErrors({
@@ -71,20 +85,14 @@ export class PayoutPeriodController {
       });
     }
 
-    if (!period || typeof period !== "string" || period.trim() === "") {
-      return AppResponse.sendErrors({
-        res,
-        code: 400,
-        data: null,
-        message: "Period name is required and must be a valid string",
-      });
-    }
-
     try {
-      const updatedPeriod = await PayoutPeriodAction.updatePeriod(
-        id,
-        period.trim(),
-      );
+      const updatedPeriod = await PayoutPeriodAction.updatePeriod(id, {
+        ...(period && { period: period.trim() }),
+        ...(startDate && { startDate }),
+        ...(endDate && { endDate }),
+        ...(isCurrent !== undefined && { isCurrent }),
+      });
+
       return AppResponse.sendSuccess({
         res,
         code: 200,
