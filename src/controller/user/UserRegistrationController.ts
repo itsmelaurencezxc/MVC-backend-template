@@ -1,4 +1,4 @@
-import { NextFunction, Response, Request } from "express";
+import { Request, Response } from "express";
 import UserRegistrationAction from "../../action/user/UserRegistration";
 import AppResponse from "../../utils/AppResponse";
 
@@ -11,13 +11,15 @@ class UserRegistrationController {
         res,
         code: 400,
         data: null,
-        message: error.details.map((detail) => detail.message).join(","),
+        message: error.details.map((detail) => detail.message).join(", "),
       });
     }
+
     try {
       const invalidEmail = await UserRegistrationAction.checkEmail(
-        value.userEmail
+        value.userEmail,
       );
+
       if (invalidEmail) {
         return AppResponse.sendErrors({
           res,
@@ -27,7 +29,8 @@ class UserRegistrationController {
         });
       }
 
-      const result = await UserRegistrationAction.execute(value, res);
+      const result = await UserRegistrationAction.execute(value);
+
       return AppResponse.sendSuccess({
         res,
         data: result,

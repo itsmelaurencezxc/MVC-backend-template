@@ -9,8 +9,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 1. ADMIN USER MODEL
 model User {
-  id           Int       @id @default(autoincrement())
+  id           String    @id @default(uuid())
   userEmail    String    @unique
   userPassword String
   userContact  String
@@ -20,10 +21,11 @@ model User {
   @@map("user")
 }
 
+// 2. PAYOUT PERIOD / SHEET TABS (e.g. "8.18.2026 - 8.25.2026")
 model PayoutPeriod {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @default(uuid())
   period    String // Pangalan ng cut-off / tab
-  isCurrent Boolean   @default(true) // Kung ito ang active tab
+  isCurrent Boolean   @default(true)
   deletedAt DateTime? // Soft Delete Tracker
 
   createdAt DateTime @default(now())
@@ -34,16 +36,17 @@ model PayoutPeriod {
   @@map("payout_period")
 }
 
+// 3. SALARY BOARD ROW ENTRY
 model SalaryRecord {
-  id            Int       @id @default(autoincrement())
+  id            String    @id @default(uuid())
   name          String
   grossEarnings Decimal   @db.Decimal(12, 2)
-  salary        Decimal   @db.Decimal(12, 2) // Auto-computed via action
-  recmats       String? // Optional (e.g., "5k")
-  isClaimed     Boolean   @default(false) // Optional (Default is false / Unchecked)
+  salary        Decimal   @db.Decimal(12, 2)
+  recmats       String? // Optional
+  isClaimed     Boolean   @default(false)
   deletedAt     DateTime? // Soft Delete Tracker
 
-  payoutPeriodId Int
+  payoutPeriodId String // String ID na rin para tumugma sa PayoutPeriod.id
   payoutPeriod   PayoutPeriod @relation(fields: [payoutPeriodId], references: [id], onDelete: Cascade)
 
   logs EarningsLog[]
@@ -54,14 +57,15 @@ model SalaryRecord {
   @@map("salary_record")
 }
 
+// 4. EARNINGS LOG ENTRY
 model EarningsLog {
-  id             Int          @id @default(autoincrement())
-  salaryRecordId Int
+  id             String       @id @default(uuid())
+  salaryRecordId String // String ID para tumugma sa SalaryRecord.id
   salaryRecord   SalaryRecord @relation(fields: [salaryRecordId], references: [id], onDelete: Cascade)
 
   amount    Decimal   @db.Decimal(12, 2)
   entryDate DateTime  @default(now())
-  deletedAt DateTime? // Soft Delete Tracker
+  deletedAt DateTime?
 
   createdAt DateTime @default(now())
 
