@@ -28,7 +28,7 @@ businessRoutes.delete(
   AuthMiddleware.verifyAdminToken,
   payoutPeriodController.delete,
 );
-
+businessRoutes.get("/salary-record", salaryRecordController.getAll);
 businessRoutes.get(
   "/salary-record/:payoutPeriodId",
   salaryRecordController.getByPeriod,

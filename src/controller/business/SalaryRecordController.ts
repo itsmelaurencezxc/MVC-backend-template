@@ -1,8 +1,26 @@
 import { Request, Response } from "express";
-import AppResponse from "../../utils/AppResponse"; // Adjust path
+import AppResponse from "../../utils/AppResponse";
 import { SalaryRecordAction } from "../../business/SalaryRecordAction";
 
 export class SalaryRecordController {
+  async getAll(req: Request, res: Response) {
+    try {
+      const records = await SalaryRecordAction.getAll();
+      return AppResponse.sendSuccess({
+        res,
+        code: 200,
+        data: records,
+      });
+    } catch (error: any) {
+      return AppResponse.sendErrors({
+        res,
+        code: 500,
+        data: null,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
+
   async getByPeriod(req: Request, res: Response) {
     const { payoutPeriodId } = req.params;
 
@@ -44,7 +62,6 @@ export class SalaryRecordController {
       payoutPeriodId,
     } = req.body;
 
-    // 1. ERROR CHECKS: Field Validation
     if (!name || name.trim() === "") {
       return AppResponse.sendErrors({
         res,
@@ -136,10 +153,10 @@ export class SalaryRecordController {
     }
   }
 
+  // 5. DELETE SALARY RECORD
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
-    // 1. ERROR CHECK: Param validation
     if (!id) {
       return AppResponse.sendErrors({
         res,
@@ -152,7 +169,6 @@ export class SalaryRecordController {
     try {
       await SalaryRecordAction.softDelete(id);
 
-      // 2. SUCCESS RETURN
       return AppResponse.sendSuccess({
         res,
         code: 200,
