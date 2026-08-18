@@ -22,9 +22,12 @@ model User {
 
 // 2. EMPLOYEE
 model Employee {
-  id        String    @id @default(uuid())
-  name      String
-  deletedAt DateTime?
+  id            String    @id @default(uuid())
+  name          String
+  discordId     String? // Discord ID o Username
+  discordAvatar String? // Link ng profile picture sa Discord
+  discordBanner String? // Link ng banner
+  deletedAt     DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -85,7 +88,7 @@ model SalaryRecord {
   @@map("salary_record")
 }
 
-// 5. EARNINGS LOG
+// 5. EARNINGS LOG (Optional kung gusto mo pang panatilihin sa schema)
 model EarningsLog {
   id String @id @default(uuid())
 

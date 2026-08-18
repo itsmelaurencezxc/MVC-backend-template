@@ -164,4 +164,129 @@ export class SalaryRecordController {
       });
     }
   }
+
+  //gett all time earnings heree employee
+  async getAllTimeEarnings(req: Request, res: Response) {
+    try {
+      const summary = await SalaryRecordAction.getAllTimeEmployeeEarnings();
+      return AppResponse.sendSuccess({
+        res,
+        code: 200,
+        data: summary,
+        message: "All-time employee earnings retrieved successfully",
+      });
+    } catch (error: any) {
+      return AppResponse.sendErrors({
+        res,
+        code: 500,
+        data: null,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
+
+  //all time earning ng mechanic shop
+  async getOverallEarnings(req: Request, res: Response) {
+    try {
+      const summary = await SalaryRecordAction.getOverallShopEarnings();
+      return AppResponse.sendSuccess({
+        res,
+        code: 200,
+        data: summary,
+        message: "Overall shop earnings retrieved successfully",
+      });
+    } catch (error: any) {
+      return AppResponse.sendErrors({
+        res,
+        code: 500,
+        data: null,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
+
+  //contolerrrrr employee
+  async getEmployeeModalDetails(req: Request, res: Response) {
+    const { employeeId } = req.params;
+    const { periods } = req.query; // Payout period IDs separated by comma
+
+    if (!employeeId) {
+      return AppResponse.sendErrors({
+        res,
+        code: 400,
+        data: null,
+        message: "Employee ID is required",
+      });
+    }
+
+    if (!periods || typeof periods !== "string") {
+      return AppResponse.sendErrors({
+        res,
+        code: 400,
+        data: null,
+        message:
+          "Payout periods parameter (?periods=id1,id2,id3,id4) is required",
+      });
+    }
+
+    const payoutPeriodIds = periods.split(",");
+
+    try {
+      const details = await SalaryRecordAction.getEmployeeModalDetails(
+        employeeId,
+        payoutPeriodIds,
+      );
+      return AppResponse.sendSuccess({
+        res,
+        code: 200,
+        data: details,
+        message: "Employee modal details retrieved successfully",
+      });
+    } catch (error: any) {
+      const code = error.message === "Employee not found" ? 404 : 500;
+      return AppResponse.sendErrors({
+        res,
+        code,
+        data: null,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
+
+  //monthly records
+  async getPublicMonthlyLeaderboardList(req: Request, res: Response) {
+    const { periods } = req.query; // Payout period IDs separated by comma (e.g. ?periods=id1 o id1,id2,id3,id4)
+
+    if (!periods || typeof periods !== "string") {
+      return AppResponse.sendErrors({
+        res,
+        code: 400,
+        data: null,
+        message:
+          "Please provide payout period ID(s) separated by comma (e.g. ?periods=id1,id2)",
+      });
+    }
+
+    const payoutPeriodIds = periods.split(",");
+
+    try {
+      const leaderboard =
+        await SalaryRecordAction.getPublicMonthlyLeaderboardList(
+          payoutPeriodIds,
+        );
+      return AppResponse.sendSuccess({
+        res,
+        code: 200,
+        data: leaderboard,
+        message: "Public leaderboard list retrieved successfully",
+      });
+    } catch (error: any) {
+      return AppResponse.sendErrors({
+        res,
+        code: 500,
+        data: null,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
 }

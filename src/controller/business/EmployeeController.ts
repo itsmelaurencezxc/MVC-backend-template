@@ -51,7 +51,8 @@ export class EmployeeController {
   }
 
   async create(req: Request, res: Response) {
-    const { name } = req.body;
+    // Kunin din ang discordId galing sa request body
+    const { name, discordId } = req.body;
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       return AppResponse.sendErrors({
@@ -63,7 +64,8 @@ export class EmployeeController {
     }
 
     try {
-      const employee = await EmployeeAction.create(name);
+      // Ipasa ang pangalan at discordId (kung meron man)
+      const employee = await EmployeeAction.create(name, discordId);
       return AppResponse.sendSuccess({
         res,
         code: 201,
@@ -81,7 +83,8 @@ export class EmployeeController {
 
   async update(req: Request, res: Response) {
     const { id } = req.params;
-    const { name } = req.body;
+    // Kunin din ang discordId para ma-update sakaling magbago
+    const { name, discordId } = req.body;
 
     if (!id) {
       return AppResponse.sendErrors({
@@ -102,7 +105,7 @@ export class EmployeeController {
     }
 
     try {
-      const updatedEmployee = await EmployeeAction.update(id, name);
+      const updatedEmployee = await EmployeeAction.update(id, name, discordId);
       return AppResponse.sendSuccess({
         res,
         code: 200,

@@ -20,19 +20,23 @@ export class EmployeeAction {
     return employee;
   }
 
-  public static async create(name: string) {
+  // Idinagdag ang discordId (optional)
+  public static async create(name: string, discordId?: string) {
     return await prisma.employee.create({
       data: {
         name: name.trim(),
+        discordId: discordId?.trim() || null,
       },
     });
   }
 
-  public static async update(id: string, name: string) {
+  // Idinagdag ang discordId (optional para pwede rin silang mag-update)
+  public static async update(id: string, name: string, discordId?: string) {
     return await prisma.employee.update({
       where: { id },
       data: {
         name: name.trim(),
+        discordId: discordId?.trim() || null,
       },
     });
   }

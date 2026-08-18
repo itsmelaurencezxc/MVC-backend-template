@@ -37,6 +37,15 @@ businessRoutes.delete(
 businessRoutes.get("/salary-record/get-all", salaryRecordController.getAll);
 
 businessRoutes.get(
+  "/salary-record/all-time-earnings",
+  salaryRecordController.getAllTimeEarnings,
+);
+businessRoutes.get(
+  "/salary-record/overall-earnings",
+  salaryRecordController.getOverallEarnings,
+);
+
+businessRoutes.get(
   "/salary-record/get-by-period/:payoutPeriodId",
   salaryRecordController.getByPeriod,
 );
@@ -57,6 +66,15 @@ businessRoutes.delete(
   "/salary-record/delete/:id",
   AuthMiddleware.verifyAdminToken,
   salaryRecordController.delete,
+);
+// PUBLIC ROUTE para sa Employee Modal Breakdown (Discord Profile + Weekly earnings)
+businessRoutes.get(
+  "/salary-record/public-employee-modal/:employeeId",
+  salaryRecordController.getEmployeeModalDetails,
+);
+businessRoutes.get(
+  "/salary-record/public-leaderboard-list",
+  salaryRecordController.getPublicMonthlyLeaderboardList,
 );
 
 export default businessRoutes;
