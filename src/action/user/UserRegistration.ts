@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 type UserRegistrationProps = {
   userEmail: string;
   userPassword: string;
+  confirmPassword?: string;
   userContact: string;
 };
 
@@ -38,10 +39,11 @@ class UserRegistrationAction {
           "any.only": "Confirm password must match the password field",
         }),
       userContact: Joi.string()
-        .pattern(/^\+?\d{10,12}$/)
+        .pattern(/^(09|\+639)\d{9}$/)
         .required()
         .messages({
-          "string.pattern.base": "Invalid user contact number format",
+          "string.pattern.base":
+            "Invalid user contact number format (Use 09XXXXXXXXX or +639XXXXXXXXX)",
         }),
     });
     return UserRegistrationSchema.validate(data, { abortEarly: false });
